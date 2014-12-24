@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/webroot/js/jquery.cookie.js"></script>
+    <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.css">
+    <!--link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap-theme.css"-->
+    <link rel="stylesheet" type="text/css" href="webroot/css/style.css">
+</head>
+<script>
+
+    var nickname;
+    var title = $("title");
+    var new_message;
+    function flash() {
+        setInterval(function () {
+            if(!new_message) {
+                (title.text() == "940 Wd. St. Chat -- WOW!!!!! \\\\^o^//") ? title.text("940 WD. ST. CHAT -- NEW MESSAGE!!! \\\\^0^//") : title.text("940 Wd. St. Chat -- WOW!!!!! \\\\^o^//");
+            } else {
+                title.text("940 Wd. St. Chat -- No new messages //^'o^\\\\");
+            }
+        }, 900);
+    }
+    function removeA(arr){
+        var what, a= arguments, L= a.length, ax;
+        while(L> 1 && arr.length){
+            what= a[--L];
+            while((ax= arr.indexOf(what))!= -1){
+                arr.splice(ax, 1);
+            }
+        }
+        return arr;
+    }
+    function draw_users(users) {
+
+        $('#users').text('');
+        var sorted_users = users.sort().reverse();
+
+        sorted_users = removeA(sorted_users, nickname);
+        sorted_users.unshift(nickname);
+
+        for(i in sorted_users) {
+            var user = $('<li>').text(sorted_users[i]);
+            if(sorted_users[i]===nickname) {
+                user.addClass('active_user');
+
+            }
+            user.append($('<img>').attr('src', '/webroot/img/typing.gif').addClass('typing').attr('data-nickname_typing', nickname).hide());
+            $('#users').append(user);
+
+        }
+    }
+    function insert_message(data){
+        var media = $('<div class="media">');
+        var media_body = $('<div class="media-body">');
+        var heading = $('<h5 class="heading">').text(data.name);
+        media_body.append(heading).append($('<div>').text(data.message));
+        media.append(media_body);
+        if(data.name===nickname) {
+            media_body.addClass('pull-right');
+        }
+        $("#conversation").append(media);
+        $("#conversation").prop({'scrollTop': $("#conversation").prop("scrollHeight") - $("#conversation").height()} )
+        flash()
+        new_message = true;
+    }
+    function show_typing(nickname) {
+        $('[data-nickname_typing="'+nickname+'"]').show();
+
+        setTimeout(function() {
+            $('[data-nickname_typing="'+nickname+'"]').fadeOut("slow", function () {
+                $(this).hide();
+            });
+        }, 400);
+    }
+    var socket = io.connect('http://10.0.0.14:3000');
+    socket.on('connect', function(client) {
+       $('#conversation').text('');
+
+    });
+    socket.on('disconnect', function(client){
+        socket.emit('exit', nickname);
+    });
+    socket.on('messages', function(data) {
+        insert_message(data);
+    });
+    socket.on('users', function(users) {
+        draw_users(users)
+    });
+    socket.on('typing', function(nickname) {
+        show_typing(nickname)
+    })
+    $(function() {
+        $('#conversation').text('Connecting to server...')
+        if(typeof $.cookie('nickname')!== "string" || $.cookie('nickname')=="" ) {
+            nickname =  prompt("What is your name?");
+            $.cookie('nickname', nickname, {expires: 365, path:'/'});
+        } else {
+            console.log($.cookie('nickname'))
+            nickname = $.cookie('nickname');
+
+        }
+        //nickname =  "Chris";
+        socket.emit('join', nickname);
+        $('#message').focus();
+        $('#message').keyup(function () {
+            socket.emit('typing', nickname);
+            show_typing(nickname)
+        });
+        $('#chat_form').submit(function() {
+            var message = $('#message').val();
+            if(message!=="") {
+                insert_message({name:nickname, message:message});
+                socket.emit('messages', message);
+                $('#message').val("");
+            }
+            $('#message').focus();
+        });
+    });
+</script>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            940 Wood St Chatline (Free Version)
+        </div>
+    </nav>
+    <div class="container">
+        <div class="panel chat_window">
+            <div  class="panel-body row">
+                    <ul id="users" class="col-md-3">
+                    </ul>
+                    <ul id="conversation" class="col-md-9">
+                    </ul>
+            </div>
+            <div class="panel-footer">
+                <form id="chat_form" action="#" class="form form-inline">
+                    <div class="form-group">
+                        <input  id="message" autocomplete="off" class="form-control" type="text" placeholder="Enter a message...">
+                    </div>
+                    <button type="submit" class="btn-primary btn" id="send">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

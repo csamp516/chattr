@@ -1,0 +1,54 @@
+/* style.css -- Cascading StyleSheet
+*
+* @author Chris Samperisi
+* @date April 26, 2014
+*/
+
+.typing {
+    height: 10px;
+    vertical-align: 1px;
+    margin-left: 5px;
+}
+body {
+    background: url('../img/retina_wood.png');
+}
+#users {
+    list-style-type: none;
+}
+#users li {
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 12px;
+    color: #777;
+
+}
+#users li.active_user {
+     color: #222;
+ }
+.navbar {
+    border-radius:0;
+    background: rgba(255,255,255,.9);
+}
+#conversation {
+    max-height:518px;
+    overflow: hidden;
+}
+.navbar-brand {
+    font-weight: 200;
+}
+#conversation h5 {
+    text-transform:uppercase;
+    font-size:9px;
+    color: #666;
+}
+#conversation .pull-right h5 {
+    text-align: right;
+}
+.chat_window{
+    background: rgba(255,255,255,.7);
+    box-shadow:0px 10px 15px rgba(100,100,100,.9);
+}
+#chat_form .form-group {
+    display: inline-flex;
+}
